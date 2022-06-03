@@ -6,7 +6,7 @@ import os
 import time
 import wikipedia
 
-pictureAmount = 10
+pictureAmount = 5
 
 api_key = 'YOBqmX4Zj2L6kpZuqrJ7b2kZc'
 api_key_secret = 'hORcrDHdf0LI7LE2Oy1qGmTR7cZOFdz3ZbU1ec6A2assoKBYze'
@@ -39,9 +39,24 @@ def randomPicture(picture_object, random_from_amount):
 
     media = api.media_upload(f'dataset/{picture_object}/{random_filename}')
 
-    api.update_status(status=f'This is a picture of "{picture_object}".', media_ids=[media.media_id_string])
-    
-    #print(wikipedia.summary({picture_object}))
+    wiki_search = wikipedia.search({picture_object})
+
+    try:
+        summary = wikipedia.summary(wiki_search[random.randrange(1,len(wiki_search), 1)], sentences=2)
+    except wikipedia.exceptions.PageError:
+        summary = "Couldn't find info on wiki for this one!"
+    except wikipedia.exceptions.DisambiguationError as e:
+        sub_search = random.choice(e.options)
+        summary = wikipedia.summary(sub_search, sentences=2)
+        wiki_search = wikipedia.search(sub_search)
+
+
+    if len(summary) > 267 - len(picture_object):
+        summary = wikipedia.summary(wiki_search[random.randrange(1,len(wiki_search), 1)], sentences=1)
+        if len(summary) > 267 - len(picture_object):
+            summary = ""
+
+    api.update_status(status=f'This is: "{picture_object}." '+ f'{summary}', media_ids=[media.media_id_string])
 
     try:
         shutil.rmtree(f'C:\\twtbot\\dataset\\{picture_object}')
@@ -49,9 +64,10 @@ def randomPicture(picture_object, random_from_amount):
         print("Error: %s : %s" % (f'C:\\twtbot\\dataset\\{picture_object}', e.strerror))
 
 
-# while True:
-#     time.sleep(5)
-#     randomPicture(randomWord(), pictureAmount)
-#     time.sleep(15)
+    print(f'Picture object: {picture_object}')
+    print(f'Tweet posted succesfully!')
 
-randomPicture(randomWord(), pictureAmount)
+
+while True:
+    randomPicture(randomWord(), pictureAmount)
+    time.sleep(1800)
