@@ -1,29 +1,29 @@
 from bing_image_downloader import downloader
-import tweepy
 import random
 import shutil
 import os
 import time
 import wikipedia
 import re
+import config
 
-pictureAmount = 5
+api = config.setup()
 
-api_key = 'YOBqmX4Zj2L6kpZuqrJ7b2kZc'
-api_key_secret = 'hORcrDHdf0LI7LE2Oy1qGmTR7cZOFdz3ZbU1ec6A2assoKBYze'
-access_token = '1532676880645636096-t4sNJ5iTVyaAjIUyuJkrmnCydyuyC5'
-access_token_secret = 'maM0GCCGxZMt8o1lv0jXaeoslYzgF82QM0yL2LGyrPJab'
+pictureAmount = 3
 
-authenticator = tweepy.OAuthHandler(api_key, api_key_secret)
-authenticator.set_access_token(access_token, access_token_secret)
-api = tweepy.API(authenticator, wait_on_rate_limit=True)
 
-# def randomWord():
-#     with open("words.txt", "r") as file:
-#         allText = file.read()
-#         words = list(map(str, allText.split()))
-#         picture_object = random.choice(words)
-#         return picture_object
+
+def randomWord():
+    with open("words.txt", "r") as file:
+        allText = file.read()
+        words = list(map(str, allText.split()))
+        random_word = random.choice(words)
+        return random_word
+
+def make_random_friendship():
+    for user in api.search_users(q=randomWord(), count=20):
+        api.create_friendship(user_id=user.id_str)
+        time.sleep(0.1)
 
 def randomPicture(picture_object, random_from_amount):
 
@@ -67,6 +67,10 @@ def randomPicture(picture_object, random_from_amount):
     print(f'Tweet posted succesfully!')
 
 
+
 while True:
     randomPicture(wikipedia.random(pages=1), pictureAmount)
+    #make_random_friendship()
     time.sleep(300)
+
+
