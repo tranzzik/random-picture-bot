@@ -5,6 +5,7 @@ import shutil
 import os
 import time
 import wikipedia
+import re
 
 pictureAmount = 5
 
@@ -17,14 +18,16 @@ authenticator = tweepy.OAuthHandler(api_key, api_key_secret)
 authenticator.set_access_token(access_token, access_token_secret)
 api = tweepy.API(authenticator, wait_on_rate_limit=True)
 
-def randomWord():
-    with open("words.txt", "r") as file:
-        allText = file.read()
-        words = list(map(str, allText.split()))
-        picture_object = random.choice(words)
-        return picture_object
+# def randomWord():
+#     with open("words.txt", "r") as file:
+#         allText = file.read()
+#         words = list(map(str, allText.split()))
+#         picture_object = random.choice(words)
+#         return picture_object
 
 def randomPicture(picture_object, random_from_amount):
+
+    picture_object = re.sub('\W+',' ', picture_object)
 
     downloader.download(f'{picture_object}', limit=random_from_amount, output_dir='dataset', adult_filter_off=True, force_replace=False, timeout=10)
 
@@ -39,20 +42,16 @@ def randomPicture(picture_object, random_from_amount):
 
     media = api.media_upload(f'dataset/{picture_object}/{random_filename}')
 
-    wiki_search = wikipedia.search({picture_object})
-
     try:
-        summary = wikipedia.summary(wiki_search[random.randrange(1,len(wiki_search), 1)], sentences=2)
+        summary = wikipedia.summary(picture_object, sentences=2)
     except wikipedia.exceptions.PageError:
         summary = "Couldn't find info on wiki for this one!"
     except wikipedia.exceptions.DisambiguationError as e:
-        sub_search = random.choice(e.options)
+        sub_search = e.options[0]
         summary = wikipedia.summary(sub_search, sentences=2)
-        wiki_search = wikipedia.search(sub_search)
-
 
     if len(summary) > 267 - len(picture_object):
-        summary = wikipedia.summary(wiki_search[random.randrange(1,len(wiki_search), 1)], sentences=1)
+        summary = wikipedia.summary(picture_object, sentences=1)
         if len(summary) > 267 - len(picture_object):
             summary = ""
 
@@ -69,5 +68,5 @@ def randomPicture(picture_object, random_from_amount):
 
 
 while True:
-    randomPicture(randomWord(), pictureAmount)
-    time.sleep(1800)
+    randomPicture(wikipedia.random(pages=1), pictureAmount)
+    time.sleep(300)
