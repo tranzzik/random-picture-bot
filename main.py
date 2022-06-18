@@ -1,4 +1,4 @@
-from bing_image_downloader import downloader
+#from bing_image_downloader import downloader
 import random
 import shutil
 import os
@@ -6,6 +6,7 @@ import time
 import wikipedia
 import re
 import config
+import gidl
 
 api = config.setup()
 
@@ -23,24 +24,24 @@ def randomWord():
 def make_random_friendship():
     for user in api.search_users(q=randomWord(), count=20):
         api.create_friendship(user_id=user.id_str)
+        print(f'Made friendship with user id: {user.id_str}')
         time.sleep(0.1)
 
-def randomPicture(picture_object, random_from_amount):
+def randomPicture(picture_object):
 
     picture_object = re.sub('\W+',' ', picture_object)
+    print(f'Looking for: {picture_object}')
 
-    downloader.download(f'{picture_object}', limit=random_from_amount, output_dir='dataset', adult_filter_off=True, force_replace=False, timeout=10)
-
-    if pictureAmount != 1:
-        randPictureNumber = random.randrange(1, random_from_amount, 1)
+    #downloader.download(f'{picture_object}', limit=random_from_amount, output_dir='dataset', adult_filter_off=True, force_replace=False, timeout=10)
+    gidl.downloadimages(f'{picture_object}')
     
-    path = f'C:\\twtbot\\dataset\\{picture_object}'
+    path = f'C:\\twtbot\\downloads\\img'
     random_filename = random.choice([
     x for x in os.listdir(path)
     if os.path.isfile(os.path.join(path, x))
     ])
 
-    media = api.media_upload(f'dataset/{picture_object}/{random_filename}')
+    media = api.media_upload(f'downloads/img/{random_filename}')
 
     try:
         summary = wikipedia.summary(picture_object, sentences=2)
@@ -58,9 +59,9 @@ def randomPicture(picture_object, random_from_amount):
     api.update_status(status=f'This is: "{picture_object}." '+ f'{summary}', media_ids=[media.media_id_string])
 
     try:
-        shutil.rmtree(f'C:\\twtbot\\dataset\\{picture_object}')
+        shutil.rmtree(f'C:\\twtbot\\downloads\\img')
     except OSError as e:
-        print("Error: %s : %s" % (f'C:\\twtbot\\dataset\\{picture_object}', e.strerror))
+        print("Error: %s : %s" % (f'C:\\twtbot\\downloads\\img', e.strerror))
 
 
     print(f'Picture object: {picture_object}')
@@ -69,8 +70,15 @@ def randomPicture(picture_object, random_from_amount):
 
 
 while True:
-    randomPicture(wikipedia.random(pages=1), pictureAmount)
-    #make_random_friendship()
-    time.sleep(300)
-
+    try:
+        randomPicture(wikipedia.random(pages=1))
+        # try:
+        #     make_random_friendship()
+        # except:
+        #     pass
+        time.sleep(300)
+    except KeyboardInterrupt:
+        break
+    except:
+        pass
 
